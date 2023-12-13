@@ -17,6 +17,7 @@ const completed = req.query.completed === 'true'
 res.json(todos.filter(todo => todo.completed === completed))
 })
 
+
 //ToDoのIDの値を管理するための変数
 let id = 2
 //ToDoの新規登録
@@ -33,6 +34,33 @@ app.post('/api/todos',(req,res,next)=> {
   todos.push(todo)
   //ステータスコード201(Created)で結果を返す
   res.status(201).json(todo)
+})
+
+app.use('/api/todos/:id(\\d+)',(req,res,next)=> {
+  const targetId = Number(req.params.id)
+  const todo = todos.find(todo => todo.id === targetId)
+  if (!todo) {
+    const err = new Error('ToDo not found')
+    err.statusCode = 404
+    return next(err)
+  }
+  req.todo = todo
+  next()
+})
+
+app.route('/api/todos/:id(\\d+)/completed')
+.put((req,res)=> {
+  req.todo.completed = true
+  res.json(req.todo)
+})//completedをtrueにする
+.delete((req,res)=> {
+  req.todo.completed = false
+  res.json(req.todo)
+})//completedをfalseにする
+
+app.delete('/api/todos/:id(\\d+)',(req,res)=> {
+  todos = todos.filter(todo => todo !== req.todo)
+  res.status(204).end()
 })
 
 app.use((err,req,res,next)=> {
